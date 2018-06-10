@@ -50,6 +50,16 @@
                                      (diff by (cons '(+) els))))
            (['expt by c] :seq) (cond (number? c) (list '* c (list 'expt by (dec c)))
                                      (list? c) (list '* (list 'Math/log by) expr))
-           (['+ & els] :seq) (concat '(+) (map #(diff by %) els))
-           c 0)))
+           (['expt a x] :seq) (if (and (seq? x) (self-evaluating? x))
+                                0
+                                `(* (Math/log ~a) ~expr))
+           (['Math/sin x] :seq) (if
+                                  (self-evaluating? x) 0
+                                  `(* (Math/cos ~x) ~(diff by x)))
+           (['Math/cos x] :seq) (if
+                                  (self-evaluating? x) 0
+                                  `(* (- (Math/cos ~x)) ~(diff by x)))
 
+           (['+ & els] :seq) (concat '(+) (map #(diff by %) els))
+           (['- & els] :seq) (concat '(+) (map #(diff by %) els))
+           c 0)))
