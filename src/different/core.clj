@@ -7,13 +7,11 @@
   (or (number? expr)
       (and 
         (not (symbol? expr))
-        (match expr
-               ([op & els] :seq) (and (symbol? op) (every? self-evaluating? els))))))
+        (match expr ([op & els] :seq) (and (symbol? op) (every? self-evaluating? els))))))
 
 (defn reduce-numbers
   [numbers]
-  (def to-reduce
-    (map eval (filter self-evaluating? numbers)))
+  (def to-reduce (map eval (filter self-evaluating? numbers)))
   (if (empty? to-reduce)
     to-reduce
     (list (apply + to-reduce))))
@@ -48,11 +46,13 @@
                                    (if (empty? els) 
                                      els
                                      (diff by (cons '(+) els))))
-           (['expt by c] :seq) (cond (number? c) (list '* c (list 'expt by (dec c)))
-                                     (list? c) (list '* (list 'Math/log by) expr))
-           (['expt a x] :seq) (if (and (seq? x) (self-evaluating? x))
-                                0
-                                `(* (Math/log ~a) ~expr))
+           (['expt by b] :seq) `(* ~b (expt ~by (- ~b 1)))
+           (['expt a b] :seq)  (cond 
+                                  (and (self-evaluating? b) 
+                                       (self-evaluating? a)) 0
+                                  (and (not (self-evaluating? a))
+                                       (self-evaluating? b)) (list '* b (list 'expt a (list '- b 1)) (diff by a))
+                                  )
            (['Math/sin x] :seq) (if
                                   (self-evaluating? x) 0
                                   `(* (Math/cos ~x) ~(diff by x)))
