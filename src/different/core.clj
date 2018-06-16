@@ -6,8 +6,7 @@
   [expr]
   (or (number? expr)
       (and 
-        (not (symbol? expr))
-        (match expr ([op & els] :seq) (and (symbol? op) (every? self-evaluating? els))))))
+        (not (symbol? expr)) (match expr ([op & els] :seq) (and (symbol? op) (every? self-evaluating? els))))))
 
 (defn reduce-numbers
   [numbers]
@@ -46,10 +45,11 @@
                                    (if (empty? els) 
                                      els
                                      (diff by (cons '(+) els))))
-           (['expt by b] :seq) `(* ~b (expt ~by (- ~b 1)))
            (['expt a b] :seq)  (cond 
                                   (and (self-evaluating? b) 
                                        (self-evaluating? a)) 0
+                                  (and (self-evaluating? a)
+                                       ((complement self-evaluating?) b)) (list '* (list 'expt a b) (list 'Math/log a))
                                   (and (not (self-evaluating? a))
                                        (self-evaluating? b)) (list '* b (list 'expt a (list '- b 1)) (diff by a))
                                   )
